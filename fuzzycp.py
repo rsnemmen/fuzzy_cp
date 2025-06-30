@@ -13,6 +13,8 @@ from termcolor import colored
 # Human-readable file sizes
 import humanize
 
+import sys
+
 
 
 
@@ -78,7 +80,18 @@ def get_args():
     # Optional flags
     p.add_argument("-s", "--space",
                    action="store_true",
-                   help="displays disk space occupied by matching files")
+                   help="displays disk space occupied by matching files"
+                   )
+    p.add_argument("-c", "--copy",               
+        metavar="PATH",             
+        type=Path,                  
+        help="copy the file(s) to this destination path"
+        )
+    p.add_argument("-m", "--move",               
+        metavar="PATH",             
+        type=Path,                  
+        help="move matching files to a given dir (not implemented yet"
+        )
 
     return p.parse_args()
 
@@ -107,6 +120,11 @@ def preprocessing(files):
 # Get command-line arguments
 args = get_args()
 
+# Interrupts execution if non-implemented options are provided
+if args.move:
+    print("This option is not yet implemented. Aborting.", file=sys.stderr)
+    sys.exit(1)
+
 # Get the list of names to be matched against filenames
 names = read_names(args.names)
 
@@ -124,7 +142,7 @@ best_matches = file_matching(names, files_cleaned)
 # Total file size
 total=0
 
-# Print the results
+# Process the best-matches, first passs
 print(colored("Name","green")+"                 "+colored("Best-match","blue")+"                 "+colored("Score","red"))
 for name, (cleaned_fn, score) in best_matches.items():
     original_fn = map_orig[cleaned_fn] # lookup
@@ -135,3 +153,16 @@ for name, (cleaned_fn, score) in best_matches.items():
 
 if args.space:
     print("Disk space =", humanize.naturalsize(total, binary=True))     # e.g. 358.6 MB
+
+# Asks for user confirmation before writing to disk
+if args.copy:
+    user_input = input("Proceed copying the files? (Y/N): ")
+
+    # Convert the input to lowercase for case-insensitive comparison
+    if user_input.lower() == 'y':
+        # Process the best-matches, second pass
+        print('proceeding')
+    else:
+        print("Operation cancelled.")
+
+

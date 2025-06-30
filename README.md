@@ -66,3 +66,7 @@ brew install fuzzycp
 
 pip install fuzzycp
 ```
+
+## How it works
+
+TBD
