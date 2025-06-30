@@ -92,40 +92,10 @@ names = read_names(args.names)
 candidates = glob.glob('*') # non‐hidden
 files = [f for f in candidates if os.path.isfile(f)]
 
-names_list = read_names(file_path)
-
-
-# Print the resulting list to verify
-if list_of_names:
-    print("Successfully read the following names from the file:")
-    print(list_of_names)
-
-
-
-# --- Example Usage ---
-
-# List 1: The names you want to find files for.
-names_to_match = [
-    "John Smith",
-    "Jane Doe",
-    "Peter Jones PhD",
-    "The Big Company Inc"
-]
-
-# List 2: The list of filenames in a directory.
-file_list = [
-    "jane_doe_resume_2023.pdf",
-    "photo_of_john_smith.jpg",
-    "the_big_co.txt",
-    "dr_p_jones_cv.docx",
-    "random_file.txt"
-]
-
 # Run the matching function
-best_matches = find_best_file_matches(names_to_match, file_list)
+best_matches = file_matching(names, files)
 
 # Print the results
 for name, match_info in best_matches.items():
     filename, score = match_info
     print(f"The best match for '{name}' is '{filename}' with a score of {score}.")
-'''
