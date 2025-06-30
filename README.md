@@ -2,6 +2,8 @@
 
 This program solves the following type of problem for which I found no existing tools. 
 
+![fuzzycp Demo GIF](demo.gif)
+
 ## The problem
 
 You have a file `names.txt` containing a list of names:
