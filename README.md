@@ -1,4 +1,4 @@
-# File operations (`mv`, `cp`) with fuzzy name matching
+# `fuzzycp`: Fuzzy file operations (`mv`, `cp`) 
 
 This program solves the following type of problem for which I found no existing tools. 
 
@@ -40,13 +40,13 @@ You have a directory with hundreds of files, and you want to copy to another dir
 
 Normally people would do this sort of thing by manually selecting file by file and copying them. Not anymore. Here is how you solve this using `fuzzycp`.
 
-Copy only the best-matching files to directory `destination_directory`:
+Copy only the best-matching files to directory `dest/directory`:
 
-    fuzzycp names.txt -c destination/directory
+    fuzzycp names.txt -c dest/directory
 
-Move only the best-matching files to directory `destination_directory`:
+Move only the best-matching files to directory `dest/directory`:
 
-    fuzzycp names.txt -m destination/directory
+    fuzzycp names.txt -m dest/directory
 
 Print the best-matching files and the matching score:
 
