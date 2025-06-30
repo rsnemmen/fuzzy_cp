@@ -115,7 +115,8 @@ def preprocessing(files):
 
 
 
-
+# Parsing and preprocessing
+# --------------------------------------------------------------------------------
 
 # Get command-line arguments
 args = get_args()
@@ -137,7 +138,11 @@ files_cleaned=preprocessing(files)
 map_orig = dict(zip(files_cleaned, files))
 
 # Run the matching function
+# --------------------------------------------------------------------------------
 best_matches = file_matching(names, files_cleaned)
+
+# Post-processing
+# --------------------------------------------------------------------------------
 
 # Total file size
 total=0
