@@ -1,5 +1,11 @@
-# We will use thefuzz in this example, but the syntax for rapidfuzz is very similar.
+#!/usr/bin/env python3
+
+# Fuzzy name matching
 from thefuzz import process
+# Parsing command-line arguments
+import argparse
+
+
 
 def find_best_file_matches(names, filenames):
     """
@@ -25,6 +31,71 @@ def find_best_file_matches(names, filenames):
             matches[name] = (best_match[0], best_match[1])
             
     return matches
+
+
+
+def read_names_from_file(filepath):
+    """
+    Reads names from a text file, with one name per line.
+
+    Args:
+        filepath (str): The path to the text file.
+
+    Returns:
+        list: A list of names with leading/trailing whitespace removed.
+              Returns an empty list if the file cannot be found.
+    """
+    try:
+        with open(filepath, 'r') as file:
+            # Use a list comprehension for a concise and readable solution.
+            # line.strip() removes leading/trailing whitespace, including the newline character.
+            names = [line.strip() for line in file]
+        return names
+    except FileNotFoundError:
+        print(f"Error: The file at {filepath} was not found.")
+        return []
+
+
+def get_args():
+    '''
+    Get command-line arguments
+    '''
+    p = argparse.ArgumentParser()
+
+    # Positional argument
+    p.add_argument("filename",
+                   help="path to the input file")
+
+    ''''
+    # Optional flags
+    p.add_argument("-v", "--verbose",
+                   action="store_true",
+                   help="enable verbose output")
+    # Typed option with default
+    p.add_argument("-n", "--number",
+                   type=int,
+                   default=1,
+                   help="an integer repeat count")
+    '''
+    return p.parse_args()
+
+
+args = get_args()
+
+
+'''
+# Define the path to your file
+file_path = 'names.txt' 
+
+# Call the function to get the list of names
+list_of_names = read_names_from_file(file_path)
+
+# Print the resulting list to verify
+if list_of_names:
+    print("Successfully read the following names from the file:")
+    print(list_of_names)
+
+
 
 # --- Example Usage ---
 
@@ -52,3 +123,4 @@ best_matches = find_best_file_matches(names_to_match, file_list)
 for name, match_info in best_matches.items():
     filename, score = match_info
     print(f"The best match for '{name}' is '{filename}' with a score of {score}.")
+'''
