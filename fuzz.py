@@ -29,7 +29,7 @@ def file_matching(names, filenames):
         # The extractOne method finds the best match for 'name' from the 'filenames' list.
         # It returns a tuple containing the match, the score, and the index.
         # We are interested in the match and the score.
-        best_match = process.extractOne(name, filenames, scorer=fuzz.WRatio)
+        best_match = process.extractOne(name, filenames, scorer=fuzz.QRatio)
         
         # The result can be None if the list of choices is empty.
         if best_match:
@@ -115,10 +115,9 @@ files_cleaned=preprocessing(files)
 map_orig = dict(zip(files_cleaned, files))
 
 # Run the matching function
-#best_matches = file_matching(names, files)
 best_matches = file_matching(names, files_cleaned)
 
 # Print the results
-for name, match_info in best_matches.items():
-    filename, score = match_info
-    print(f"The best match for '{name}' is '{filename}' with a score of {score}.")
+for name, (cleaned_fn, score) in best_matches.items():
+    original_fn = map_orig[cleaned_fn] # lookup
+    print(f"Best match for '{name}' is '{original_fn}' (score {score:.0f}).")
