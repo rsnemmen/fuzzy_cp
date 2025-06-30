@@ -12,8 +12,10 @@ from pathlib import Path
 from termcolor import colored
 # Human-readable file sizes
 import humanize
+# Progress bar
+from tqdm.auto import tqdm
 
-import sys
+import sys, shutil
 
 
 
@@ -117,7 +119,6 @@ def preprocessing(files):
 
 # Parsing and preprocessing
 # --------------------------------------------------------------------------------
-
 # Get command-line arguments
 args = get_args()
 
@@ -141,9 +142,8 @@ map_orig = dict(zip(files_cleaned, files))
 # --------------------------------------------------------------------------------
 best_matches = file_matching(names, files_cleaned)
 
-# Post-processing
+# Print best-matches and other info
 # --------------------------------------------------------------------------------
-
 # Total file size
 total=0
 
@@ -159,14 +159,31 @@ for name, (cleaned_fn, score) in best_matches.items():
 if args.space:
     print("Disk space =", humanize.naturalsize(total, binary=True))     # e.g. 358.6 MB
 
+# File operations (disk writing)
+# --------------------------------------------------------------------------------
 # Asks for user confirmation before writing to disk
 if args.copy:
-    user_input = input("Proceed copying the files? (Y/N): ")
+    user_input = input("Proceed copying the files marked in blue? (Y/N): ")
 
     # Convert the input to lowercase for case-insensitive comparison
     if user_input.lower() == 'y':
         # Process the best-matches, second pass
-        print('proceeding')
+        for name, (cleaned_fn, score) in tqdm( # progress bar
+            best_matches.items(),
+            total=len(best_matches),
+            desc="Copying files"
+            ):
+            original_fn = map_orig[cleaned_fn] # lookup
+
+            # Destination dir
+            dst=Path(args.copy)
+            # Create if missing
+            dst.mkdir(parents=True, exist_ok=True)
+            # Source
+            src=Path(original_fn)
+            target=dst/src.name
+            # Copy operation
+            shutil.copy2(src, target)
     else:
         print("Operation cancelled.")
 
