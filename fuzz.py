@@ -4,6 +4,8 @@
 from thefuzz import process
 # Parsing command-line arguments
 import argparse
+# File search
+import glob, os
 
 
 
@@ -83,8 +85,15 @@ def get_args():
 # Get command-line arguments
 args = get_args()
 
-# Call the function to get the list of names
+# Get the list of names to be matched against filenames
+names = read_names(args.names)
+
+# Get the list of all files in the current directory 
+candidates = glob.glob('*') # non‐hidden
+files = [f for f in candidates if os.path.isfile(f)]
+
 names_list = read_names(file_path)
+
 
 # Print the resulting list to verify
 if list_of_names:
