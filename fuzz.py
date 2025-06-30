@@ -7,7 +7,7 @@ import argparse
 
 
 
-def find_best_file_matches(names, filenames):
+def file_matching(names, filenames):
     """
     Finds the best matching filename for each name using fuzzy string matching.
 
@@ -34,7 +34,7 @@ def find_best_file_matches(names, filenames):
 
 
 
-def read_names_from_file(filepath):
+def read_names(filepath):
     """
     Reads names from a text file, with one name per line.
 
@@ -63,8 +63,8 @@ def get_args():
     p = argparse.ArgumentParser()
 
     # Positional argument
-    p.add_argument("filename",
-                   help="path to the input file")
+    p.add_argument("names",
+                   help="path to file containing names to be matched")
 
     ''''
     # Optional flags
@@ -80,15 +80,11 @@ def get_args():
     return p.parse_args()
 
 
+# Get command-line arguments
 args = get_args()
 
-
-'''
-# Define the path to your file
-file_path = 'names.txt' 
-
 # Call the function to get the list of names
-list_of_names = read_names_from_file(file_path)
+names_list = read_names(file_path)
 
 # Print the resulting list to verify
 if list_of_names:
