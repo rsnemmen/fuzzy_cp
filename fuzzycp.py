@@ -4,10 +4,14 @@
 from rapidfuzz import process, fuzz
 # Parsing command-line arguments
 import argparse
-# File search
+# File search, regex
 import glob, os
 import re
 from pathlib import Path
+# Terminal colors
+from termcolor import colored
+# Human-readable file sizes
+import humanize
 
 
 
@@ -71,17 +75,11 @@ def get_args():
     p.add_argument("names",
                    help="path to file containing names to be matched")
 
-    ''''
     # Optional flags
-    p.add_argument("-v", "--verbose",
+    p.add_argument("-s", "--space",
                    action="store_true",
-                   help="enable verbose output")
-    # Typed option with default
-    p.add_argument("-n", "--number",
-                   type=int,
-                   default=1,
-                   help="an integer repeat count")
-    '''
+                   help="displays disk space occupied by matching files")
+
     return p.parse_args()
 
 
@@ -123,7 +121,17 @@ map_orig = dict(zip(files_cleaned, files))
 # Run the matching function
 best_matches = file_matching(names, files_cleaned)
 
+# Total file size
+total=0
+
 # Print the results
+print(colored("Name","green")+"                 "+colored("Best-match","blue")+"                 "+colored("Score","red"))
 for name, (cleaned_fn, score) in best_matches.items():
     original_fn = map_orig[cleaned_fn] # lookup
-    print(f"Best match for '{name}' is '{original_fn}' (score {score:.0f}).")
+    print(colored(name,"green"),"|", colored(original_fn,"blue"),colored(round(score), "red"))
+
+    if args.space:
+        total += os.path.getsize(original_fn)  # bytes
+
+if args.space:
+    print("Disk space =", humanize.naturalsize(total, binary=True))     # e.g. 358.6 MB

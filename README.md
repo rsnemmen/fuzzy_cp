@@ -38,7 +38,7 @@ You have a directory with hundreds of files, and you want to copy to another dir
 
 ## The solution
 
-Normally people would do this sort of thing by manually selecting file by file and copying them. Not anymore. Here is how you solve this using `fuzzycp`.
+Normally people would do this sort of thing by manually selecting file by file and copying them. Not anymore. Here is how you solve this using `fuzzycp`. First `cd` to the directory containing the files.
 
 Copy only the best-matching files to directory `dest/directory`:
 
@@ -51,3 +51,18 @@ Move only the best-matching files to directory `dest/directory`:
 Print the best-matching files and the matching score:
 
     fuzzycp names.txt 
+
+Print the best-matching files, and the space they occupy:
+
+    fuzzycp names.txt -s
+
+
+## Installation
+
+TBD
+
+```shell
+brew install fuzzycp
+
+pip install fuzzycp
+```
