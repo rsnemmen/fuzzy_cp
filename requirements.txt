@@ -1,0 +1,4 @@
+rapidfuzz
+termcolor
+humanize
+tqdm
