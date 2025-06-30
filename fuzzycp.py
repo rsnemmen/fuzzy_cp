@@ -157,13 +157,16 @@ for name, (cleaned_fn, score) in best_matches.items():
         total += os.path.getsize(original_fn)  # bytes
 
 if args.space:
+    print()
     print("Disk space =", humanize.naturalsize(total, binary=True))     # e.g. 358.6 MB
 
 # File operations (disk writing)
 # --------------------------------------------------------------------------------
 # Asks for user confirmation before writing to disk
 if args.copy:
+    print()
     user_input = input("Proceed copying the files marked in blue? (Y/N): ")
+    print()
 
     # Convert the input to lowercase for case-insensitive comparison
     if user_input.lower() == 'y':
