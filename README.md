@@ -71,4 +71,13 @@ pip install fuzzycp
 
 ## How it works
 
-TBD
+fuzzycp uses the [RapidFuzz library—a fast, lightweight C++ library—](https://github.com/rapidfuzz/RapidFuzz)for fuzzy matching, i.e. measuring how similar two strings (or other sequences) are and finding the best match in a collection. 
+
+Internally, fuzzycp compares the names using the `QRatio`(Quick Ratio) scorer, which uses a simple Levenshtein-based percentage after basic lowercase/whitespace cleaning. This is the fastest scorer in RapidFuzz, useful for quick filters or typo-level comparisons. More sophisticated scorer can easily be implemented.
+
+## TBD
+
+- [ ] Homebrew recipe
+- [ ] pip install recipe
+- [ ] move files functionality
+- [ ] windows standalone EXE
