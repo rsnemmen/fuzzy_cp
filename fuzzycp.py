@@ -123,9 +123,9 @@ def preprocessing(files):
 args = get_args()
 
 # Interrupts execution if non-implemented options are provided
-if args.move:
-    print("This option is not yet implemented. Aborting.", file=sys.stderr)
-    sys.exit(1)
+#if args.move:
+#    print("This option is not yet implemented. Aborting.", file=sys.stderr)
+#    sys.exit(1)
 
 # Get the list of names to be matched against filenames
 names = read_names(args.names)
@@ -138,7 +138,7 @@ files_cleaned=preprocessing(files)
 # Build a map from cleaned up filenames ➜ original file name
 map_orig = dict(zip(files_cleaned, files))
 
-# Run the matching function
+# Fuzzy matching function
 # --------------------------------------------------------------------------------
 best_matches = file_matching(names, files_cleaned)
 
@@ -163,10 +163,20 @@ if args.space:
 # File operations (disk writing)
 # --------------------------------------------------------------------------------
 # Asks for user confirmation before writing to disk
-if args.copy:
+if args.copy and args.move:
+    print("Please specify move or copy, not both.")
+    sys.exit(1)
+elif args.copy:
+    user_input = input("\n Proceed copying the files marked in blue? (Y/N): ")
     print()
-    user_input = input("Proceed copying the files marked in blue? (Y/N): ")
-    print()
+    description="Copying files"
+    # Destination dir
+    dst=Path(args.copy)
+elif args.move:
+    user_input = input("\n Proceed moving the files marked in blue? (Y/N): ")
+    print()    
+    description="Moving files"
+    dst=Path(args.move)
 
     # Convert the input to lowercase for case-insensitive comparison
     if user_input.lower() == 'y':
@@ -174,19 +184,17 @@ if args.copy:
         for name, (cleaned_fn, score) in tqdm( # progress bar
             best_matches.items(),
             total=len(best_matches),
-            desc="Copying files"
+            desc=description
             ):
             original_fn = map_orig[cleaned_fn] # lookup
 
-            # Destination dir
-            dst=Path(args.copy)
             # Create if missing
             dst.mkdir(parents=True, exist_ok=True)
             # Source
             src=Path(original_fn)
             target=dst/src.name
-            # Copy operation
-            shutil.copy2(src, target)
+            if args.copy: shutil.copy2(src, target) # Copy operation
+            if args.move: shutil.move(src,target) # move operation
     else:
         print("Operation cancelled.")
 
