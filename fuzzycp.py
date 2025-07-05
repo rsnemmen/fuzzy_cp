@@ -95,6 +95,12 @@ def get_args():
         type=Path,                  
         help="move matching files to a given dir (not implemented yet"
         )
+    p.add_argument("-o", "--output",               
+        metavar="PATH",             
+        nargs="?",
+        const="-",              
+        help="write list of matching files to file, or stdout if no file is provided"
+        )
 
     return p.parse_args()
 
@@ -122,6 +128,11 @@ def preprocessing(files):
 # --------------------------------------------------------------------------------
 # Get command-line arguments
 args = get_args()
+# Where to write list of matching files if '-o' was specified
+if args.output == "-":
+    out = sys.stdout
+elif args.output is not None:
+    out = open(Path(args.output), "w")
 
 # Interrupts execution if non-implemented options are provided
 #if args.move:
@@ -148,18 +159,26 @@ best_matches = file_matching(names, files_cleaned)
 # Total file size
 total=0
 
-# Process the best-matches, first passs
-print(colored("Name","green")+"                 "+colored("Best-match","blue")+"                 "+colored("Score","red"))
+# Process the best-matches, first pass
+if not args.output: 
+    print(colored("Name","green")+"                 "+colored("Best-match","blue")+"                 "+colored("Score","red"))
 for name, (cleaned_fn, score) in best_matches.items():
     original_fn = map_orig[cleaned_fn] # lookup
-    print(colored(name,"green"),"|", colored(original_fn,"blue"),colored(round(score), "red"))
-
+    if args.output:
+        print(original_fn, file=out)        
+    else:
+        print(colored(name,"green"),"|", colored(original_fn,"blue"),colored(round(score), "red"))
+    
     if args.space:
         total += os.path.getsize(original_fn)  # bytes
 
-if args.space:
+if args.space and not args.output:
     print()
     print("Disk space =", humanize.naturalsize(total, binary=True))     # e.g. 358.6 MB
+
+if args.output:
+    if out is not sys.stdout:
+        out.close()
 
 # File operations (disk writing)
 # --------------------------------------------------------------------------------
