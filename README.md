@@ -81,5 +81,5 @@ Internally, fuzzycp compares the names using the `QRatio`(Quick Ratio) scorer, w
 
 - [ ] Homebrew recipe
 - [ ] pip install recipe
-- [ ] move files functionality
+- [x] move files functionality
 - [ ] windows standalone EXE

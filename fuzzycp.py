@@ -73,7 +73,8 @@ def get_args():
     '''
     Get command-line arguments
     '''
-    p = argparse.ArgumentParser()
+    p = argparse.ArgumentParser(prog="fuzzycp",
+        description="File operations with fuzzy name matching.")
 
     # Positional argument
     p.add_argument("names",
