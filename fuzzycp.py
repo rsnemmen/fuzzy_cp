@@ -194,10 +194,11 @@ elif args.copy:
     dst=Path(args.copy)
 elif args.move:
     user_input = input("\n Proceed moving the files marked in blue? (Y/N): ")
-    print()    
+    print()
     description="Moving files"
     dst=Path(args.move)
 
+if args.copy or args.move:
     # Convert the input to lowercase for case-insensitive comparison
     if user_input.lower() == 'y':
         # Process the best-matches, second pass

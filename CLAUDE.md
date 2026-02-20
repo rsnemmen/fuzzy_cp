@@ -42,4 +42,3 @@ The entire program lives in `fuzzycp.py` and executes at module level (no `main(
 
 The scorer (`QRatio`) is a fast Levenshtein-based percentage after basic lowercase/whitespace cleaning. Swapping for a different `rapidfuzz` scorer is straightforward in `file_matching()`.
 
-**Note:** There is a bug in the copy path — the confirmation input prompt and the `shutil.copy2` branch are inside the `elif args.move:` block. Copy confirmation currently falls through without executing. See lines 189–217.
