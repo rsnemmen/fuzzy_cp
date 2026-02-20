@@ -93,13 +93,18 @@ def get_args():
     p.add_argument("-m", "--move",               
         metavar="PATH",             
         type=Path,                  
-        help="move matching files to a given dir (not implemented yet"
+        help="move matching files to a given dir"
         )
     p.add_argument("-o", "--output",               
         metavar="PATH",             
         nargs="?",
         const="-",              
         help="write list of matching files to file, or stdout if no file is provided"
+        )
+    p.add_argument("-t", "--threshold",               
+        type=int,
+        default=50,              
+        help="minimum match score (0-100), default 50"
         )
 
     return p.parse_args()
@@ -159,10 +164,12 @@ best_matches = file_matching(names, files_cleaned)
 # Total file size
 total=0
 
-# Process the best-matches, first pass
+# Process the best-matches, first pass (filter by threshold)
 if not args.output: 
     print(colored("Name","green")+"                 "+colored("Best-match","blue")+"                 "+colored("Score","red"))
 for name, (cleaned_fn, score) in best_matches.items():
+    if score < args.threshold:
+        continue
     original_fn = map_orig[cleaned_fn] # lookup
     if args.output:
         print(original_fn, file=out)        
@@ -199,12 +206,12 @@ elif args.move:
     dst=Path(args.move)
 
 if args.copy or args.move:
-    # Convert the input to lowercase for case-insensitive comparison
     if user_input.lower() == 'y':
-        # Process the best-matches, second pass
-        for name, (cleaned_fn, score) in tqdm( # progress bar
-            best_matches.items(),
-            total=len(best_matches),
+        filtered_matches = [(name, cleaned_fn, score) for name, (cleaned_fn, score) 
+                            in best_matches.items() if score >= args.threshold]
+        for name, cleaned_fn, score in tqdm( # progress bar
+            filtered_matches,
+            total=len(filtered_matches),
             desc=description
             ):
             original_fn = map_orig[cleaned_fn] # lookup
