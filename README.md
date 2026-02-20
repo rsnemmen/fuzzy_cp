@@ -83,3 +83,4 @@ Internally, fuzzycp compares the names using the `QRatio`(Quick Ratio) scorer, w
 - [ ] pip install recipe
 - [x] move files functionality
 - [ ] windows standalone EXE
+- [ ] add multi-disk mode
