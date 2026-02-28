@@ -37,7 +37,7 @@ def file_matching(names, filenames):
         # The extractOne method finds the best match for 'name' from the 'filenames' list.
         # It returns a tuple containing the match, the score, and the index.
         # We are interested in the match and the score.
-        best_match = process.extractOne(name, filenames, scorer=fuzz.QRatio)
+        best_match = process.extractOne(name, filenames, scorer=fuzz.WRatio)
         
         # The result can be None if the list of choices is empty.
         if best_match:
@@ -62,11 +62,20 @@ def read_names(filepath):
         with open(filepath, 'r') as file:
             # Use a list comprehension for a concise and readable solution.
             # line.strip() removes leading/trailing whitespace, including the newline character.
-            names = [line.strip() for line in file]
+            names = [line.strip() for line in file if line.strip()]
         return names
     except FileNotFoundError:
         print(f"Error: The file at {filepath} was not found.")
         return []
+
+
+def _threshold_type(value):
+    ivalue = int(value)
+    if not 0 <= ivalue <= 100:
+        raise argparse.ArgumentTypeError(
+            f"threshold must be between 0 and 100, got {ivalue}"
+        )
+    return ivalue
 
 
 def get_args():
@@ -101,9 +110,9 @@ def get_args():
         const="-",              
         help="write list of matching files to file, or stdout if no file is provided"
         )
-    p.add_argument("-t", "--threshold",               
-        type=int,
-        default=50,              
+    p.add_argument("-t", "--threshold",
+        type=_threshold_type,
+        default=50,
         help="minimum match score (0-100), default 50"
         )
 
@@ -139,21 +148,22 @@ if args.output == "-":
 elif args.output is not None:
     out = open(Path(args.output), "w")
 
-# Interrupts execution if non-implemented options are provided
-#if args.move:
-#    print("This option is not yet implemented. Aborting.", file=sys.stderr)
-#    sys.exit(1)
-
 # Get the list of names to be matched against filenames
 names = read_names(args.names)
+if not names:
+    print("Error: no names to match (file empty or not found).", file=sys.stderr)
+    sys.exit(1)
 
 # Get the list of all files in the current directory 
 candidates = glob.glob('*') # non‐hidden
 files = [f for f in candidates if os.path.isfile(f)]
 # Preprocess filenames
 files_cleaned=preprocessing(files)
-# Build a map from cleaned up filenames ➜ original file name
-map_orig = dict(zip(files_cleaned, files))
+# Build a map from cleaned up filenames ➜ original file name(s)
+# Using a list to handle multiple files that clean to the same stem (e.g. movie.mp4 and movie.mkv)
+map_orig: dict = {}
+for cleaned, orig in zip(files_cleaned, files):
+    map_orig.setdefault(cleaned, []).append(orig)
 
 # Fuzzy matching function
 # --------------------------------------------------------------------------------
@@ -162,30 +172,44 @@ best_matches = file_matching(names, files_cleaned)
 # Print best-matches and other info
 # --------------------------------------------------------------------------------
 # Total file size
-total=0
+total = 0
 
-# Process the best-matches, first pass (filter by threshold)
-if not args.output: 
-    print(colored("Name","green")+"                 "+colored("Best-match","blue")+"                 "+colored("Score","red"))
+# Collect rows above threshold: (query_name, original_fn, score)
+rows = []
 for name, (cleaned_fn, score) in best_matches.items():
     if score < args.threshold:
         continue
-    original_fn = map_orig[cleaned_fn] # lookup
-    if args.output:
-        print(original_fn, file=out)        
-    else:
-        print(colored(name,"green"),"|", colored(original_fn,"blue"),colored(round(score), "red"))
-    
-    if args.space:
-        total += os.path.getsize(original_fn)  # bytes
-
-if args.space and not args.output:
-    print()
-    print("Disk space =", humanize.naturalsize(total, binary=True))     # e.g. 358.6 MB
+    for original_fn in map_orig[cleaned_fn]:
+        rows.append((name, original_fn, round(score)))
+        if args.space:
+            total += os.path.getsize(original_fn)  # bytes
 
 if args.output:
+    for name, original_fn, score in rows:
+        print(original_fn, file=out)
     if out is not sys.stdout:
         out.close()
+else:
+    # Two-pass aligned columnar output
+    col1_w = max((len(r[0]) for r in rows), default=4)
+    col2_w = max((len(r[1]) for r in rows), default=10)
+    col1_w = max(col1_w, len("Name"))
+    col2_w = max(col2_w, len("Best-match"))
+    header = (colored("Name", "green").ljust(col1_w + (len(colored("Name", "green")) - len("Name")))
+              + "  "
+              + colored("Best-match", "blue").ljust(col2_w + (len(colored("Best-match", "blue")) - len("Best-match")))
+              + "  "
+              + colored("Score", "red"))
+    print(header)
+    for name, original_fn, score in rows:
+        print(colored(name, "green").ljust(col1_w + (len(colored(name, "green")) - len(name)))
+              + "  "
+              + colored(original_fn, "blue").ljust(col2_w + (len(colored(original_fn, "blue")) - len(original_fn)))
+              + "  "
+              + colored(str(score), "red"))
+    if args.space:
+        print()
+        print("Disk space =", humanize.naturalsize(total, binary=True))
 
 # File operations (disk writing)
 # --------------------------------------------------------------------------------
@@ -207,22 +231,18 @@ elif args.move:
 
 if args.copy or args.move:
     if user_input.lower() == 'y':
-        filtered_matches = [(name, cleaned_fn, score) for name, (cleaned_fn, score) 
-                            in best_matches.items() if score >= args.threshold]
-        for name, cleaned_fn, score in tqdm( # progress bar
-            filtered_matches,
-            total=len(filtered_matches),
-            desc=description
-            ):
-            original_fn = map_orig[cleaned_fn] # lookup
-
-            # Create if missing
-            dst.mkdir(parents=True, exist_ok=True)
-            # Source
-            src=Path(original_fn)
-            target=dst/src.name
-            if args.copy: shutil.copy2(src, target) # Copy operation
-            if args.move: shutil.move(src,target) # move operation
+        # Expand map_orig lists so each file gets its own progress entry
+        filtered_files = []
+        for name, (cleaned_fn, score) in best_matches.items():
+            if score >= args.threshold:
+                for original_fn in map_orig[cleaned_fn]:
+                    filtered_files.append(original_fn)
+        dst.mkdir(parents=True, exist_ok=True)
+        for original_fn in tqdm(filtered_files, desc=description):
+            src = Path(original_fn)
+            target = dst / src.name
+            if args.copy: shutil.copy2(src, target)
+            if args.move: shutil.move(src, target)
     else:
         print("Operation cancelled.")
 
