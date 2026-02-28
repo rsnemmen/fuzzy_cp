@@ -75,7 +75,7 @@ pip install fuzzycp
 
 fuzzycp uses the [RapidFuzz library—a fast, lightweight C++ library—](https://github.com/rapidfuzz/RapidFuzz)for fuzzy matching, i.e. measuring how similar two strings (or other sequences) are and finding the best match in a collection. 
 
-Internally, fuzzycp compares the names using the `QRatio`(Quick Ratio) scorer, which uses a simple Levenshtein-based percentage after basic lowercase/whitespace cleaning. This is the fastest scorer in RapidFuzz, useful for quick filters or typo-level comparisons. More sophisticated scorer can easily be implemented.
+Internally, fuzzycp compares the names using the `WRatio` scorer, which internally tries `ratio`, `partial_ratio`, `token_sort_ratio`, and `token_set_ratio` and picks the highest — making it robust for partial or reordered names. The scorer can easily be swapped in `file_matching()` for any other RapidFuzz scorer.
 
 ## TBD
 

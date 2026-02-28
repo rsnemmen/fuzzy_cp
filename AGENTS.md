@@ -19,6 +19,7 @@ python fuzzycp.py names.txt -c dest/dir  # copy matched files
 python fuzzycp.py names.txt -m dest/dir  # move matched files
 python fuzzycp.py names.txt -o           # write matched filenames to stdout
 python fuzzycp.py names.txt -o out.txt   # write matched filenames to file
+python fuzzycp.py names.txt -t 70        # only show matches with score >= 70
 
 # Build standalone binary (macOS)
 pyinstaller fuzzycp.spec
@@ -229,10 +230,10 @@ From `requirements.txt`:
 
 ## Fuzzy Matching
 
-The scorer (`fuzz.QRatio`) is a fast Levenshtein-based percentage after basic lowercase/whitespace cleaning. To swap for a different scorer, modify `file_matching()`:
+The current scorer is `fuzz.WRatio`, which internally tries `ratio`, `partial_ratio`, `token_sort_ratio`, and `token_set_ratio` and picks the highest — robust for partial or reordered names. To swap scorer, modify `file_matching()`:
 
 ```python
-best_match = process.extractOne(name, filenames, scorer=fuzz.QRatio)
+best_match = process.extractOne(name, filenames, scorer=fuzz.WRatio)
 ```
 
-Other available scorers: `fuzz.ratio`, `fuzz.WRatio`, `fuzz.partial_ratio`
+Other available scorers: `fuzz.ratio`, `fuzz.QRatio`, `fuzz.partial_ratio`
