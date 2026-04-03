@@ -63,13 +63,11 @@ Print the best-matching files, and the space they occupy:
 
 ## Installation
 
-TBD
-
 ```shell
-brew install fuzzycp
-
-pip install fuzzycp
+curl -fsSL https://raw.githubusercontent.com/rsnemmen/fuzzy_cp/main/install.sh | sh
 ```
+
+This downloads the pre-built binary for your platform (macOS arm64/x86_64, Linux x86_64) and installs it to `~/.local/bin/fuzzycp`.
 
 ## How it works
 
