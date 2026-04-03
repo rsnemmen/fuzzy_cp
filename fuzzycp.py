@@ -1,4 +1,4 @@
-#!/usr/bin/env python3
+#!/usr/bin/env python
 
 # Fuzzy name matching
 from rapidfuzz import process, fuzz

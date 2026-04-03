@@ -78,7 +78,6 @@ Internally, fuzzycp compares the names using the `WRatio` scorer, which internal
 ## TBD
 
 - [ ] Homebrew recipe
-- [ ] pip install recipe
 - [x] move files functionality
 - [ ] windows standalone EXE
 - [ ] add multi-disk mode
