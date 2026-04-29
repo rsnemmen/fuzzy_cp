@@ -1,0 +1,18 @@
+[build-system]
+requires = ["setuptools>=61"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "fuzzycp"
+version = "0.1.0"
+requires-python = ">=3.6"
+dependencies = [
+    "rapidfuzz",
+    "termcolor",
+    "humanize",
+    "tqdm",
+]
+
+[tool.setuptools]
+package-dir = {"" = "src"}
+packages = ["fuzzycp"]

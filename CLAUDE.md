@@ -4,22 +4,33 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 ## What this is
 
-`fuzzycp` is a single-file Python CLI tool (`fuzzycp.py`) that performs copy/move file operations using fuzzy name matching. Given a text file of names (one per line), it finds the best-matching filenames in the current working directory and optionally copies or moves them.
+`fuzzycp` is a Python package and CLI tool that performs copy/move file operations using fuzzy name matching. Given a text file of names (one per line), it finds the best-matching filenames in the current working directory and optionally copies or moves them.
+
+## Package layout
+
+```
+src/fuzzycp/
+    __init__.py   — public API (file_matching, preprocessing, read_names, _threshold_type)
+    __main__.py   — CLI entry point (get_args, main)
+```
+
+## Installing
+
+```bash
+pip install -e .          # editable install, enables `from fuzzycp import …`
+```
 
 ## Running
 
 ```bash
-# Install dependencies
-pip install -r requirements.txt
-
-# Run directly
-python fuzzycp.py names.txt              # print matches with scores
-python fuzzycp.py names.txt -s           # also show disk space
-python fuzzycp.py names.txt -t 70        # only show matches with score >= 70
-python fuzzycp.py names.txt -c dest/dir  # copy matched files
-python fuzzycp.py names.txt -m dest/dir  # move matched files
-python fuzzycp.py names.txt -o           # write matched filenames to stdout
-python fuzzycp.py names.txt -o out.txt   # write matched filenames to file
+# As a module (after editable install)
+python -m fuzzycp names.txt              # print matches with scores
+python -m fuzzycp names.txt -s           # also show disk space
+python -m fuzzycp names.txt -t 70        # only show matches with score >= 70
+python -m fuzzycp names.txt -c dest/dir  # copy matched files
+python -m fuzzycp names.txt -m dest/dir  # move matched files
+python -m fuzzycp names.txt -o           # write matched filenames to stdout
+python -m fuzzycp names.txt -o out.txt   # write matched filenames to file
 ```
 
 ## Building a standalone binary
@@ -29,17 +40,23 @@ pyinstaller fuzzycp.spec
 # Output binary: dist/fuzzycp
 ```
 
+## Using as a library
+
+```python
+from fuzzycp import file_matching, preprocessing, read_names
+
+files_cleaned = preprocessing(list_of_filenames)   # strips tags, extension, normalises whitespace
+matches = file_matching(names, files_cleaned)       # dict: name → (best_cleaned_fn, score)
+```
+
 ## Architecture
 
-The entire program lives in `fuzzycp.py` and executes at module level (no `main()` guard). The flow is:
+1. **`__init__.py`** — pure functions, no side effects, no argparse:
+   - `preprocessing(files)` — strips extension, replaces `_`/`-` with spaces, removes bracketed content (e.g. `(U) [!]`), normalises whitespace. Returns cleaned list parallel to input.
+   - `file_matching(names, filenames)` — uses `rapidfuzz.process.extractOne` with `fuzz.WRatio` to find one best match per name. Returns dict of `name → (cleaned_fn, score)`.
+   - `read_names(filepath)` — reads query names from file, one per line.
+2. **`__main__.py`** — argparse, candidate discovery (`glob.glob('*')`), `map_orig` collision handling, formatted output (termcolor), file copy/move (shutil + tqdm progress).
 
-1. **Argument parsing** (`get_args`) — argparse, positional `names` file + flags `-s`, `-c`, `-m`, `-o`, `-t`
-2. **Read names** (`read_names`) — reads the query names list from the provided file
-3. **Discover candidates** — `glob.glob('*')` on the current working directory (non-hidden files only)
-4. **Preprocess filenames** (`preprocessing`) — strips extension, replaces `_`/`-` with spaces, removes bracketed content (e.g. `(U) [!]`), normalizes whitespace; builds a `map_orig` dict from cleaned name → `list[str]` of original filenames (list handles collisions like `movie.mp4` and `movie.mkv` sharing the same stem)
-5. **Fuzzy match** (`file_matching`) — uses `rapidfuzz.process.extractOne` with `fuzz.WRatio` scorer to find the best match per name from the cleaned filenames list
-6. **Filter & output** — filters matches below `args.threshold` (default 50, validated 0–100), prints aligned columns of name | best-match | score (colorized), or writes filenames to file/stdout if `-o` given
-7. **File operation** — prompts for confirmation, then copies (`shutil.copy2`) or moves (`shutil.move`) matched files to destination with a `tqdm` progress bar
+The scorer (`WRatio`) tries `ratio`, `partial_ratio`, `token_sort_ratio`, `token_set_ratio` and returns the max — robust for partial or reordered tokens. Swapping scorer is one line in `file_matching()`.
 
-The scorer (`WRatio`) tries multiple strategies (`ratio`, `partial_ratio`, `token_sort_ratio`, `token_set_ratio`) and picks the highest — more robust than `QRatio` for partial or reordered names. Swapping scorer is one line in `file_matching()`.
-
+`map_orig` groups multiple files that clean to the same stem (e.g. `movie.mp4` and `movie.mkv`) so all variants are included in the operation.
