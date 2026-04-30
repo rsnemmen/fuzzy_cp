@@ -63,6 +63,23 @@ Print the best-matching files, and the space they occupy:
 
 ## Installation
 
+### Install from PyPI
+
+```shell
+pip install fuzzycp
+```
+
+This installs both the `fuzzycp` package and the `fuzzycp` command-line entry point.
+The published package targets Python 3.9+.
+
+You can also run it as a module:
+
+```shell
+python -m fuzzycp names.txt
+```
+
+### Install the standalone binary
+
 ```shell
 curl -fsSL https://raw.githubusercontent.com/rsnemmen/fuzzy_cp/main/install.sh | sh
 ```
@@ -74,6 +91,35 @@ This downloads the pre-built binary for your platform (macOS arm64/x86_64, Linux
 fuzzycp uses the [RapidFuzz library—a fast, lightweight C++ library—](https://github.com/rapidfuzz/RapidFuzz)for fuzzy matching, i.e. measuring how similar two strings (or other sequences) are and finding the best match in a collection. 
 
 Internally, fuzzycp compares the names using the `WRatio` scorer, which internally tries `ratio`, `partial_ratio`, `token_sort_ratio`, and `token_set_ratio` and picks the highest — making it robust for partial or reordered names. The scorer can easily be swapped in `file_matching()` for any other RapidFuzz scorer.
+
+## Build and release
+
+Build the source distribution and wheel from a clean checkout:
+
+```shell
+python -m pip install --upgrade build twine
+rm -rf build dist src/*.egg-info
+python -m build
+python -m twine check dist/*
+```
+
+This creates:
+
+- `dist/fuzzycp-<version>.tar.gz`
+- `dist/fuzzycp-<version>-py3-none-any.whl`
+
+To publish to PyPI:
+
+```shell
+python -m twine upload dist/*
+```
+
+Recommended maintainer checklist:
+
+1. Bump the version in `pyproject.toml`.
+2. Build and check the release artifacts with the commands above.
+3. Upload `dist/*` to PyPI.
+4. Push a version tag (`v*`) if you also want the GitHub Actions workflow to publish standalone binaries.
 
 ## TBD
 
